@@ -102,6 +102,7 @@ To see a list of commands in the program type any of the following: `?, help, sh
 | send code (sc)        | Inject a file into the conversation.                                     |
 | debug                 | Enables debug mode                                                       |
 | save                  | Saves the conversation to a file. Saving as a .md works well.            |
+| new thread (nt)       | Creates a new thread. So basically a new conversation.                   |
 | save thread (st)      | Saves current thread to threads.json, allows reloading previous threads. |
 | load threads (lt)     | Load a previous thread                                                   |
 | quit (q)              | Quits the program.                                                       |
