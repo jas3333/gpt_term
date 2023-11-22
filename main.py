@@ -4,6 +4,7 @@ from rich import print
 from rich.markdown import Markdown
 from dotenv import load_dotenv
 from lib.openlib import OpenAI
+
 from tools.functions import handle_user_input, save_conversation
 
 # Get API key
