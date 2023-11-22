@@ -24,7 +24,7 @@ while True:
     if client.debug_mode == True:
         user_input = input("Debug mode enabled: ")
     else:
-        user_input = input("\n: ")
+        user_input = input(f"\n[{client.assistant_name}]: ")
 
     print("-------------------------------------------------------------------------")
 

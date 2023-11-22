@@ -16,6 +16,7 @@ class OpenAI:
         self.assistants = []
         self.run_id = ""
         self.debug_mode = False
+        self.assistant_name = ""
 
         self.brave_search = BraveSearch(brave_api)
         self.web_data = []
@@ -36,9 +37,12 @@ class OpenAI:
         create_thread_url = "https://api.openai.com/v1/threads"
         response = requests.post(create_thread_url, headers=self.assistants_header).json()
         self.thread_id = response["id"]
+        assistant = self.retrieve_assistant()
+
         if self.debug_mode == True:
             print("Creating thread...")
             print(response)
+            print(assistant)
 
         return response
 
@@ -70,6 +74,14 @@ class OpenAI:
         assistants = [{"name": item["name"], "id": item["id"]} for item in data["data"]]
 
         return assistants
+
+    def retrieve_assistant(self):
+        retrieve_assistant_url = f"https://api.openai.com/v1/assistants/{self.assistant_id}"
+        response = requests.get(retrieve_assistant_url, headers=self.assistants_header)
+
+        self.assistant_name = response.json()["name"]
+
+        return response.json()
 
     def create_run(self):
         create_run_url = f"https://api.openai.com/v1/threads/{self.thread_id}/runs"

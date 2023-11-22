@@ -1,6 +1,7 @@
+import os
+import json
 from rich.table import Table
 from rich import print
-import os
 from rich.console import Console
 
 
@@ -31,6 +32,8 @@ def handle_user_input(user_input, client):
             ("send code (sc)", "Send a code file to the thread."),
             ("debug", "Enable debug mode"),
             ("save", "Saves converasation to a file. Recommend to use .md"),
+            ("save thread (st)", "Saves current thread to threads.json to continue conversation."),
+            ("load threads (lt)", "Get a list of saved threads and load"),
             ("quit (q)", "Quits the program."),
         ]
 
@@ -71,12 +74,57 @@ def handle_user_input(user_input, client):
             return False
         elif user.isdigit() and int(user) <= len(assistants) - 1:
             client.assistant_id = assistants[int(user)]["id"]
-            client.delete_thread()
-            client.create_thread()
         else:
             print("Not a valid option")
 
         return False
+
+    elif user_input == "save thread" or user_input == "st":
+        thread_id = client.thread_id
+        if os.path.exists("threads/threads.json"):
+            with open("threads/threads.json") as file:
+                threads = json.load(file)
+                for thread in threads:
+                    if thread["thread_id"] == thread_id:
+                        print("Thread already exists.")
+                        return False
+                client.create_message("Please provide a short title for this conversation.")
+                client.create_run()
+                title = client.output()
+                new_thread = {"title": title, "thread_id": thread_id}
+                threads.append(new_thread)
+                with open("threads/threads.json", "w") as file:
+                    json.dump(threads, file)
+
+        else:
+            client.create_message("Please provide a short title for this conversation.")
+            client.create_run()
+            title = client.output()
+            with open("threads/threads.json", "w") as file:
+                thread_info = {"title": title, "thread_id": thread_id}
+                json.dump([thread_info], file)
+
+        return False
+
+    elif user_input in ("load threads", "lt", "threads"):
+        if os.path.exists("threads/threads.json"):
+            with open("threads/threads.json", "r") as file:
+                threads = json.load(file)
+
+                for index, thread in enumerate(threads):
+                    print(f"{index} - Thread ID: {thread['thread_id']}, Title: {thread['title']}")
+
+                user_thread = input("Load which thread? [c to cancel]: ")
+                if user_thread.isdigit() and int(user_thread) <= len(threads) - 1:
+                    client.thread_id = threads[int(user_thread)]["thread_id"]
+                    print(f"Now using: {threads[int(user_thread)]['title']}")
+                elif user_thread == "c":
+                    return False
+                else:
+                    print("Not a valid option")
+
+        return False
+
     elif user_input == "debug":
         if client.debug_mode == False:
             client.debug_mode = True
