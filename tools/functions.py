@@ -32,6 +32,7 @@ def handle_user_input(user_input, client):
             ("send code (sc)", "Send a code file to the thread."),
             ("debug", "Enable debug mode"),
             ("save", "Saves converasation to a file. Recommend to use .md"),
+            ("new thread (nt)", "Start a new thread"),
             ("save thread (st)", "Saves current thread to threads.json to continue conversation."),
             ("load threads (lt)", "Get a list of saved threads and load"),
             ("quit (q)", "Quits the program."),
