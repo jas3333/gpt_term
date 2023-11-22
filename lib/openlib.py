@@ -1,3 +1,4 @@
+import os
 import time
 import json
 import requests
@@ -33,6 +34,18 @@ class OpenAI:
         }
 
     # Threads are what store the messages between you and the AI
+
+    def load_thread(self):
+        if os.path.exists("threads/threads.json"):
+            with open("threads/threads.json", "r") as file:
+                threads = json.load(file)
+                if len(threads) > 0:
+                    self.thread_id = threads[0]["thread_id"]
+                    print(f"Resuming {threads[0]['title']}")
+                    self.retrieve_assistant()
+        else:
+            self.create_thread()
+
     def create_thread(self):
         create_thread_url = "https://api.openai.com/v1/threads"
         response = requests.post(create_thread_url, headers=self.assistants_header).json()

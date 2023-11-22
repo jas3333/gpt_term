@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 import os
+import json
 from rich import print
 from rich.markdown import Markdown
 from dotenv import load_dotenv
 from lib.openlib import OpenAI
+
 
 from tools.functions import handle_user_input, save_conversation
 
@@ -15,11 +17,11 @@ assistant_id = os.getenv("assistant_id")
 
 client = OpenAI(api_key=api_key, brave_api=brave_api)
 client.assistant_id = str(assistant_id)
+client.load_thread()
 assistants = client.list_assistants()
-client.create_thread()
+
 
 conversation = []
-
 
 while True:
     if client.debug_mode == True:

@@ -74,6 +74,7 @@ def handle_user_input(user_input, client):
             return False
         elif user.isdigit() and int(user) <= len(assistants) - 1:
             client.assistant_id = assistants[int(user)]["id"]
+            client.retrieve_assistant()
         else:
             print("Not a valid option")
 
@@ -122,6 +123,12 @@ def handle_user_input(user_input, client):
                     return False
                 else:
                     print("Not a valid option")
+
+        return False
+
+    elif user_input in ("new thread", "nt"):
+        print("Creating new thread.")
+        client.create_thread()
 
         return False
 
