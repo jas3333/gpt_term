@@ -19,7 +19,7 @@ def handle_user_input(user_input, client):
         os.system("clear")
         return False
 
-    elif user_input in ("options", "show options", "?"):
+    elif user_input in ("options", "show options", "?", "help"):
         console = Console()
 
         table = Table(title="Available Options")
