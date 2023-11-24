@@ -65,11 +65,8 @@ class OpenAI:
         payload = {"role": "user", "content": message}
         headers = self.assistants_header
         response = requests.post(create_message_url, headers=headers, json=payload)
-        if self.debug_mode == True:
-            print("Creating message...")
-            print(response.json())
 
-        return response.json()
+        self.create_run()
 
     # Listing the messages is needed once the run status is complete
     def list_messages(self):
@@ -186,12 +183,9 @@ class OpenAI:
                 response = requests.get(url)
                 print(f"Checking {url}")
                 soup = BeautifulSoup(response.content, "html.parser")
-                # Tag filter
                 tags = soup.find_all(["p", "code", "pre"])
                 tag_texts = [tag.text for tag in tags]
                 combined_text = ", ".join(tag_texts)
-                # paragraphs = [p.text for p in soup.find_all("p")]
-                # p_string = ", ".join(paragraphs)
                 data.append(combined_text)
             except Exception as e:
                 print(f"An error occured while fetching the URL: {url} Error: {e}")

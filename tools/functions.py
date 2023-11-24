@@ -5,12 +5,77 @@ from rich import print
 from rich.console import Console
 
 
-def save_conversation(conversation):
+def save_conversation(conversation) -> None:
     filename = input("Save conversation as? :")
 
     with open(filename, "w") as file:
         data = ", ".join(conversation)
         file.write(data)
+
+
+def show_options() -> None:
+    console = Console()
+
+    table = Table(title="Available Options")
+    table.add_column("Command", style="bold")
+    table.add_column("Description")
+
+    options = [
+        ("clear", "Clears the screen."),
+        ("change assistant (ca)", "Change the assistant."),
+        ("send code (sc)", "Send a code file to the thread."),
+        ("debug", "Enable debug mode"),
+        ("save", "Saves converasation to a file. Recommend to use .md"),
+        ("new thread (nt)", "Start a new thread"),
+        ("save thread (st)", "Saves current thread to threads.json to continue conversation."),
+        ("load threads (lt)", "Get a list of saved threads and load"),
+        ("quit (q)", "Quits the program."),
+    ]
+
+    for option in options:
+        table.add_row(option[0], option[1])
+
+    console.print(table)
+
+
+def send_code() -> str:
+    """
+    - Retrieves data from a file and returns it as a string.
+    - Takes user input for a file name
+    - Returns an empty string if the user cancels
+    - Appends a user message for querying AI on the provided data
+    """
+    user_file = input("Which file would you like to send? [cancel/c to cancel]: ")
+
+    if user_file == "c" or user_file == "cancel":
+        return ""
+
+    user_query = input("\nMessage to append: ")
+
+    try:
+        with open(user_file, "r") as file:
+            data = file.read()
+            data += user_query
+            return data
+    except FileNotFoundError:
+        print(f"The file '{user_file}' does not exists. Please check the file path.")
+        return ""
+
+
+def new_assistant_id(assistants: dict) -> str:
+    for i, item in enumerate(assistants):
+        print(f"{i}. {item['name']}")
+
+    print("\nWhich assistant would you like to switch to?\n")
+    user = input(f"[0 - {len(assistants) - 1}] - ['c' or 'cancel' to cancel]: ")
+
+    if user in ("c", "cancel"):
+        return ""
+    elif user.isdigit() and int(user) < len(assistants):
+        return assistants[int(user)]["id"]
+    else:
+        print("Not a valid option")
+        return ""
 
 
 # Anything that you don't want sent to GPT return false
@@ -20,66 +85,27 @@ def handle_user_input(user_input, client):
         return False
 
     elif user_input in ("options", "show options", "?", "help"):
-        console = Console()
-
-        table = Table(title="Available Options")
-        table.add_column("Command", style="bold")
-        table.add_column("Description")
-
-        options = [
-            ("clear", "Clears the screen."),
-            ("change assistant (ca)", "Change the assistant."),
-            ("send code (sc)", "Send a code file to the thread."),
-            ("debug", "Enable debug mode"),
-            ("save", "Saves converasation to a file. Recommend to use .md"),
-            ("new thread (nt)", "Start a new thread"),
-            ("save thread (st)", "Saves current thread to threads.json to continue conversation."),
-            ("load threads (lt)", "Get a list of saved threads and load"),
-            ("quit (q)", "Quits the program."),
-        ]
-
-        for option in options:
-            table.add_row(option[0], option[1])
-
-        console.print(table)
-
+        show_options()
         return False
 
     # Send a code snippet to the chat.
-    elif user_input == "send code" or user_input == "sc":
-        user_file = input("Which file would you like to send? [cancel/c to cancel]: ")
-
-        if user_file == "c" or user_file == "cancel":
-            return False
-
-        user_query = input("\nMessage to append: ")
-
-        try:
-            with open(user_file, "r") as file:
-                data = file.read()
-                data += user_query
-                client.create_message(f"{data}")
-                client.create_run()
-        except FileNotFoundError:
-            print(f"The file '{user_file}' does not exists. Please check the file path.")
-
-    elif user_input == "change assistant" or user_input == "ca":
-        assistants = client.list_assistants()
-        for i, item in enumerate(assistants):
-            print(f"{i}. {item['name']}")
-
-        print("Which assistant would you like to switch to?")
-        user = input(f"[0 - {len(assistants) - 1}/c to cancel]: ")
-
-        if user == "c" or user == "cancel":
-            return False
-        elif user.isdigit() and int(user) <= len(assistants) - 1:
-            client.assistant_id = assistants[int(user)]["id"]
-            client.retrieve_assistant()
+    elif user_input in ("send code", "sc"):
+        data = send_code()
+        if data:
+            client.create_message(data)
         else:
-            print("Not a valid option")
+            return False
 
-        return False
+    elif user_input in ("ca", "change assistant"):
+        assistants = client.list_assistants()
+        assistant_id = new_assistant_id(assistants)
+
+        if assistant_id:
+            client.assistant_id = assistant_id
+            client.retrieve_assistant()
+            return False
+        else:
+            return False
 
     elif user_input == "save thread" or user_input == "st":
         thread_id = client.thread_id
@@ -143,6 +169,5 @@ def handle_user_input(user_input, client):
 
     else:
         client.create_message(user_input)
-        client.create_run()
 
     return True
