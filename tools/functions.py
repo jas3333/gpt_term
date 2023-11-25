@@ -1,6 +1,7 @@
 import os
 import json
 from rich.table import Table
+from rich.markdown import Markdown
 from rich import print
 from rich.console import Console
 
@@ -78,6 +79,14 @@ def new_assistant_id(assistants: dict) -> str:
         return ""
 
 
+def print_messages(client) -> None:
+    data = client.list_messages()["data"]
+    messages = " ".join([item["content"][0]["text"]["value"] for item in data])
+    markdown = Markdown(messages, code_theme="one-dark")
+
+    print(markdown)
+
+
 # Anything that you don't want sent to GPT return false
 def handle_user_input(user_input, client):
     if user_input == "clear":
@@ -146,6 +155,7 @@ def handle_user_input(user_input, client):
                 if user_thread.isdigit() and int(user_thread) <= len(threads) - 1:
                     client.thread_id = threads[int(user_thread)]["thread_id"]
                     print(f"Now using: {threads[int(user_thread)]['title']}")
+                    print_messages(client)
                 elif user_thread == "c":
                     return False
                 else:
@@ -171,3 +181,8 @@ def handle_user_input(user_input, client):
         client.create_message(user_input)
 
     return True
+
+
+if __name__ == "__main__":
+    data = send_code()
+    print(data)

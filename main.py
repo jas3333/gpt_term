@@ -23,6 +23,7 @@ assistants = client.list_assistants()
 
 conversation = []
 
+
 while True:
     if client.debug_mode == True:
         user_input = input("Debug mode enabled: ")

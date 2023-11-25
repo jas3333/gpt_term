@@ -6,6 +6,7 @@ import random
 from .searchlib import BraveSearch
 from bs4 import BeautifulSoup
 from rich import print
+from rich.markdown import Markdown
 
 
 class OpenAI:
@@ -42,9 +43,17 @@ class OpenAI:
                 if len(threads) > 0:
                     self.thread_id = threads[0]["thread_id"]
                     print(f"Resuming {threads[0]['title']}")
+                    self.print_messages()
                     self.retrieve_assistant()
         else:
             self.create_thread()
+
+    def print_messages(self):
+        data = self.list_messages()["data"]
+        print(data)
+        messages = " ".join([item["content"][0]["text"]["value"] for item in data])
+        markdown = Markdown(messages, code_theme="one-dark")
+        print(markdown)
 
     def create_thread(self):
         create_thread_url = "https://api.openai.com/v1/threads"
