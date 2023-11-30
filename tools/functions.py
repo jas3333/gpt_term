@@ -5,6 +5,7 @@ from rich.markdown import Markdown
 from rich import print
 from rich.console import Console
 
+# Create absolute path so if app is ran from random folder, threads can be found.
 current_dir = os.path.dirname(os.path.abspath(__file__))
 threads_folder = os.path.join(current_dir, "../threads")
 
@@ -142,6 +143,7 @@ def handle_user_input(user_input, client):
                 title = client.output()
                 new_thread = {"title": title, "thread_id": thread_id}
                 threads.append(new_thread)
+                client.thread_title = title
                 with open(f"{threads_folder}/threads.json", "w") as file:
                     json.dump(threads, file)
 
@@ -149,30 +151,43 @@ def handle_user_input(user_input, client):
             client.create_message("Please provide a short title for this conversation.")
             client.create_run()
             title = client.output()
-            with open("threads/threads.json", "w") as file:
+            with open(f"{threads_folder}/threads.json", "w") as file:
                 thread_info = {"title": title, "thread_id": thread_id}
                 json.dump([thread_info], file)
 
         return False
 
     elif user_input in ("load threads", "lt", "threads"):
-        if os.path.exists(f"{threads_folder}/threads.json"):
-            with open(f"{threads_folder}/threads.json", "r") as file:
-                threads = json.load(file)
+        client.list_threads()
 
-                for index, thread in enumerate(threads):
-                    print(f"{index}. {thread['title']}")
+        thread_index = input("Load which thread? [c to cancel]: ")
+        if thread_index.isdigit():
+            index = int(thread_index)
 
-                user_thread = input("Load which thread? [c to cancel]: ")
-                if user_thread.isdigit() and int(user_thread) <= len(threads) - 1:
-                    client.thread_id = threads[int(user_thread)]["thread_id"]
-                    print(f"Now using: {threads[int(user_thread)]['title']}")
-                    client.thread_title = threads[int(user_thread)]["title"]
-                    print_messages(client)
-                elif user_thread == "c":
-                    return False
-                else:
-                    print("Not a valid option")
+            if 0 <= index < len(client.threads):
+                client.load_thread(index)
+            else:
+                print("Invalid index, thread doesn't exist.")
+        else:
+            print("Invalid input, use a number next time.")
+
+        # if os.path.exists(f"{threads_folder}/threads.json"):
+        #     with open(f"{threads_folder}/threads.json", "r") as file:
+        #         threads = json.load(file)
+        #
+        #         for index, thread in enumerate(threads):
+        #             print(f"{index}. {thread['title']}")
+        #
+        #         user_thread = input("Load which thread? [c to cancel]: ")
+        #         if user_thread.isdigit() and int(user_thread) <= len(threads) - 1:
+        #             client.thread_id = threads[int(user_thread)]["thread_id"]
+        #             print(f"Now using: {threads[int(user_thread)]['title']}")
+        #             client.thread_title = threads[int(user_thread)]["title"]
+        #             print_messages(client)
+        #         elif user_thread == "c":
+        #             return False
+        #         else:
+        #             print("Not a valid option")
 
         return False
 

@@ -10,6 +10,9 @@ from bs4 import BeautifulSoup
 from rich import print
 from rich.markdown import Markdown
 
+current_dir = os.path.dirname(os.path.abspath(__file__))
+threads_folder = os.path.join(current_dir, "../threads")
+
 
 class OpenAI:
     def __init__(self, api_key, brave_api):
@@ -22,13 +25,13 @@ class OpenAI:
         self.debug_mode = False
         self.assistant_name = ""
         self.thread_title = ""
+        self.threads = []
 
         self.brave_search = BraveSearch(brave_api)
         self.web_data = []
 
         # URLS
         self.completions_url = "https://api.openai.com/v1/chat/competions"
-        self.list_assistants_url = "https://api.openai.com/v1/assistants"
 
         # Headers
         self.assistants_header = {
@@ -37,24 +40,26 @@ class OpenAI:
             "OpenAI-Beta": "assistants=v1",
         }
 
-    # Threads are what store the messages between you and the AI
+        self.load_threads()
 
-    def load_thread(self):
-        if os.path.exists("threads/threads.json"):
-            with open("threads/threads.json", "r") as file:
-                threads = json.load(file)
-                if len(threads) > 0:
-                    self.thread_id = threads[0]["thread_id"]
-                    print(f"Resuming {threads[0]['title']}")
-                    self.thread_title = threads[0]["title"]
-                    self.print_messages()
-                    self.retrieve_assistant()
-        else:
-            self.create_thread()
+    # Threads are what store the messages between you and the AI
+    def load_thread(self, index):
+        self.thread_id = self.threads[index]["thread_id"]
+        self.thread_title = self.threads[index]["title"]
+
+        self.print_messages()
+
+    def load_threads(self):
+        if os.path.exists(f"{threads_folder}/threads.json"):
+            with open(f"{threads_folder}/threads.json", "r") as file:
+                self.threads = json.load(file)
+
+    def list_threads(self):
+        for index, thread in enumerate(self.threads):
+            print(f"{index}. {thread['title']}")
 
     def print_messages(self):
         data = self.list_messages()["data"]
-        print(data)
         messages = " ".join([item["content"][0]["text"]["value"] for item in data])
         markdown = Markdown(messages, code_theme="one-dark")
         print(markdown)
@@ -95,6 +100,7 @@ class OpenAI:
         return response
 
     def list_assistants(self):
+        self.list_assistants_url = "https://api.openai.com/v1/assistants"
         response = requests.get(self.list_assistants_url, headers=self.assistants_header)
         data = response.json()
         assistants = [{"name": item["name"], "id": item["id"]} for item in data["data"]]
@@ -104,6 +110,7 @@ class OpenAI:
     def retrieve_assistant(self):
         retrieve_assistant_url = f"https://api.openai.com/v1/assistants/{self.assistant_id}"
         response = requests.get(retrieve_assistant_url, headers=self.assistants_header)
+        print(response.json())
 
         self.assistant_name = response.json()["name"]
 
