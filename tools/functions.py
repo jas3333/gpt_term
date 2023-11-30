@@ -142,7 +142,7 @@ def handle_user_input(user_input, client):
                 title = client.output()
                 new_thread = {"title": title, "thread_id": thread_id}
                 threads.append(new_thread)
-                with open(f"threads/threads.json", "w") as file:
+                with open(f"{threads_folder}/threads.json", "w") as file:
                     json.dump(threads, file)
 
         else:
