@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 import os
-import json
+import logging
+
 from rich import print
 from rich.markdown import Markdown
 from dotenv import load_dotenv
 from lib.openlib import OpenAI
 
 
-from tools.functions import handle_user_input, save_conversation
+from tools.functions import handle_user_input, save_conversation, truncate
 
 # Get API key
 load_dotenv()
@@ -20,15 +21,24 @@ client.assistant_id = str(assistant_id)
 client.load_thread()
 assistants = client.list_assistants()
 
+# Logging
+FORMAT = "%(message)s - %(levelname)s - %(message)s"
+
+for handler in logging.root.handlers[:]:
+    logging.root.removeHandler(handler)
+
+logging.basicConfig(
+    filename="logs.log",
+    level=logging.INFO,
+    format=FORMAT,
+    filemode="w",
+)
 
 conversation = []
 
 
 while True:
-    if client.debug_mode == True:
-        user_input = input("Debug mode enabled: ")
-    else:
-        user_input = input(f"\n[{client.assistant_name}]: ")
+    user_input = input(f"\n[{client.assistant_name} | {truncate(client.thread_title, 5)}]: ")
 
     print("-------------------------------------------------------------------------")
 
@@ -40,6 +50,7 @@ while True:
         gpt_output = client.output()
         conversation.append(gpt_output)
         markdown = Markdown(gpt_output, code_theme="one-dark")
+        print()
         print(markdown)
 
     print("-------------------------------------------------------------------------")

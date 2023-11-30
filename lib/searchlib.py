@@ -1,4 +1,5 @@
 import requests
+from rich import print
 
 
 class BraveSearch:
@@ -27,5 +28,19 @@ class BraveSearch:
         return results
 
     def list_urls(self, data):
-        for item in data:
-            print(item["url"])
+        for index, item in enumerate(data):
+            print(f"[{index}] - {item}")
+
+    def select_urls(self, urls: list) -> list:
+        selected = []
+
+        user_selection = input("Select urls: [example: 1 3 5 2 0]: ")
+        user_selection = user_selection.split(" ")
+
+        for index in user_selection:
+            if index.isdigit():
+                selected.append(urls[int(index)])
+            else:
+                print("Invalid index, user a number next time...")
+
+        return selected

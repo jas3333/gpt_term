@@ -3,6 +3,8 @@ import time
 import json
 import requests
 import random
+import logging
+
 from .searchlib import BraveSearch
 from bs4 import BeautifulSoup
 from rich import print
@@ -19,6 +21,7 @@ class OpenAI:
         self.run_id = ""
         self.debug_mode = False
         self.assistant_name = ""
+        self.thread_title = ""
 
         self.brave_search = BraveSearch(brave_api)
         self.web_data = []
@@ -43,6 +46,7 @@ class OpenAI:
                 if len(threads) > 0:
                     self.thread_id = threads[0]["thread_id"]
                     print(f"Resuming {threads[0]['title']}")
+                    self.thread_title = threads[0]["title"]
                     self.print_messages()
                     self.retrieve_assistant()
         else:
@@ -61,6 +65,8 @@ class OpenAI:
         self.thread_id = response["id"]
         assistant = self.retrieve_assistant()
 
+        logging.info(f"Creating Thread: {response}")
+
         if self.debug_mode == True:
             print("Creating thread...")
             print(response)
@@ -75,15 +81,16 @@ class OpenAI:
         headers = self.assistants_header
         response = requests.post(create_message_url, headers=headers, json=payload)
 
+        logging.info(f"Sending message to API. Response: {response.json()}")
+
         self.create_run()
 
     # Listing the messages is needed once the run status is complete
     def list_messages(self):
         list_messages_url = f"https://api.openai.com/v1/threads/{self.thread_id}/messages"
         response = requests.get(list_messages_url, headers=self.assistants_header).json()
-        if self.debug_mode == True:
-            print("Listing messages...")
-            print(response)
+
+        logging.info(f"Listing messages: {response}")
 
         return response
 
@@ -106,22 +113,25 @@ class OpenAI:
         create_run_url = f"https://api.openai.com/v1/threads/{self.thread_id}/runs"
         payload = {"assistant_id": self.assistant_id}
         response = requests.post(create_run_url, headers=self.assistants_header, json=payload).json()
-        if self.debug_mode == True:
-            print("Creating run...")
-            print(response)
 
-        self.run_id = response["id"]
+        logging.info(f"Creating run, response: {response}")
+
+        try:
+            self.run_id = response["id"]
+        except Exception as e:
+            logging.error(f"An error occured: {response['error']['message']}: {e}")
 
         return response
 
     # When the AI uses a function, this method will send the output to the run
     def submit_tool_run(self, output, id):
         create_run_url = f"https://api.openai.com/v1/threads/{self.thread_id}/runs/{self.run_id}/submit_tool_outputs"
-        payload = {"tool_outputs": [{"tool_call_id": id, "output": output}]}
+        tool_outputs = [{"tool_call_id": id[i], "output": output[i]} for i in range(len(output))]
+
+        payload = {"tool_outputs": tool_outputs}
         response = requests.post(create_run_url, headers=self.assistants_header, json=payload).json()
-        if self.debug_mode == True:
-            print("Submitting tool run...")
-            print(response)
+
+        logging.info(f"Submitting a tool run: {response}")
 
         return response
 
@@ -131,9 +141,8 @@ class OpenAI:
 
         header = {"Authorization": f"Bearer {self.api_key}", "OpenAI-Beta": "assistants=v1"}
         response = requests.get(retrieve_run_url, headers=header)
-        if self.debug_mode == True:
-            print("Retrieving run...")
-            print(response.json())
+
+        logging.info(f"Retrieving run: {response.json()}")
 
         return response.json()
 
@@ -153,26 +162,30 @@ class OpenAI:
     # This method will check the status of the thread and output the results
     def output(self):
         status = self.retrieve_run()["status"]
+        search_output = []
+        ids = []
 
         # Threads are really weird, need to keep checking for updates
         while status != "completed":
             time.sleep(2)
             data = self.retrieve_run()
             status = data["status"]
-            if self.debug_mode == True:
-                print(status)
+            logging.info(f"Run status: {status}")
 
             if status == "requires_action":
                 print("GPT is doing a websearch...")
                 # Tool calls has id, type, function
-                tool_calls = data["required_action"]["submit_tool_outputs"]["tool_calls"][0]
-                id = tool_calls["id"]
-                query_arg = json.loads(tool_calls["function"]["arguments"])
-                print(f"Query: {query_arg['query']}\n\n")
+                logging.info(f"Websearch called: {data}")
+                tool_calls = data["required_action"]["submit_tool_outputs"]["tool_calls"]
+                for tool_call in tool_calls:
+                    id = tool_call["id"]
+                    ids.append(id)
+                    query_arg = json.loads(tool_call["function"]["arguments"])
+                    print(f"Query: {query_arg['query']}\n\n")
+                    search_output.append(self.web_search(query_arg["query"]))
 
-                search_output = self.web_search(query_arg["query"])
+                self.submit_tool_run(search_output, ids)
 
-                self.submit_tool_run(search_output, id)
             elif status == "failed":
                 return f"The run failed... API probably down again..."
 
@@ -183,14 +196,19 @@ class OpenAI:
 
     def web_search(self, query):
         results = self.brave_search.search(query)
-        random.shuffle(results)
         data = []
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
+        }
 
-        for index in range(4):
-            url = results[index]["url"]
+        urls = [item["url"] for item in results]
+        self.brave_search.list_urls(urls)
+        selected_urls = self.brave_search.select_urls(urls)
+
+        for url in selected_urls:
+            print(f"Checking: {url}")
             try:
-                response = requests.get(url)
-                print(f"Checking {url}")
+                response = requests.get(url, headers=headers)
                 soup = BeautifulSoup(response.content, "html.parser")
                 tags = soup.find_all(["p", "code", "pre"])
                 tag_texts = [tag.text for tag in tags]
@@ -198,8 +216,5 @@ class OpenAI:
                 data.append(combined_text)
             except Exception as e:
                 print(f"An error occured while fetching the URL: {url} Error: {e}")
-
-            if self.debug_mode == True:
-                print(f"Search result:{' '.join(data)} ")
 
         return " ".join(data)

@@ -14,6 +14,16 @@ def save_conversation(conversation) -> None:
         file.write(data)
 
 
+def truncate(string: str, length: int) -> str:
+    if len(string.split()) >= length:
+        words = string.split()
+        truncated = " ".join([words[i] for i in range(length)]) + "..."
+    else:
+        return string.strip('"')
+
+    return truncated.strip('"')
+
+
 def show_options() -> None:
     console = Console()
 
@@ -126,7 +136,6 @@ def handle_user_input(user_input, client):
                         print("Thread already exists.")
                         return False
                 client.create_message("Please provide a short title for this conversation.")
-                client.create_run()
                 title = client.output()
                 new_thread = {"title": title, "thread_id": thread_id}
                 threads.append(new_thread)
@@ -149,12 +158,13 @@ def handle_user_input(user_input, client):
                 threads = json.load(file)
 
                 for index, thread in enumerate(threads):
-                    print(f"{index} - Thread ID: {thread['thread_id']}, Title: {thread['title']}")
+                    print(f"{index}. {thread['title']}")
 
                 user_thread = input("Load which thread? [c to cancel]: ")
                 if user_thread.isdigit() and int(user_thread) <= len(threads) - 1:
                     client.thread_id = threads[int(user_thread)]["thread_id"]
                     print(f"Now using: {threads[int(user_thread)]['title']}")
+                    client.thread_title = threads[int(user_thread)]["title"]
                     print_messages(client)
                 elif user_thread == "c":
                     return False
