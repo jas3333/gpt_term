@@ -131,8 +131,8 @@ def handle_user_input(user_input, client):
 
     elif user_input == "save thread" or user_input == "st":
         thread_id = client.thread_id
-        if os.path.exists("threads/threads.json"):
-            with open("threads/threads.json") as file:
+        if os.path.exists(f"{threads_folder}/threads.json"):
+            with open(f"{threads_folder}/threads.json") as file:
                 threads = json.load(file)
                 for thread in threads:
                     if thread["thread_id"] == thread_id:
@@ -142,7 +142,7 @@ def handle_user_input(user_input, client):
                 title = client.output()
                 new_thread = {"title": title, "thread_id": thread_id}
                 threads.append(new_thread)
-                with open("threads/threads.json", "w") as file:
+                with open(f"threads/threads.json", "w") as file:
                     json.dump(threads, file)
 
         else:
@@ -156,7 +156,7 @@ def handle_user_input(user_input, client):
         return False
 
     elif user_input in ("load threads", "lt", "threads"):
-        if os.path.exists("threads/threads.json"):
+        if os.path.exists(f"{threads_folder}/threads.json"):
             with open(f"{threads_folder}/threads.json", "r") as file:
                 threads = json.load(file)
 
@@ -179,6 +179,7 @@ def handle_user_input(user_input, client):
     elif user_input in ("new thread", "nt"):
         print("Creating new thread.")
         client.create_thread()
+        client.thread_title = "New thread"
 
         return False
 
