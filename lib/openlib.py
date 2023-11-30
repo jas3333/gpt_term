@@ -49,16 +49,43 @@ class OpenAI:
 
         self.print_messages()
 
-    def load_threads(self):
+    def load_threads(self) -> None:
         if os.path.exists(f"{threads_folder}/threads.json"):
             with open(f"{threads_folder}/threads.json", "r") as file:
                 self.threads = json.load(file)
 
-    def list_threads(self):
+    def list_threads(self) -> None:
         for index, thread in enumerate(self.threads):
             print(f"{index}. {thread['title']}")
 
-    def print_messages(self):
+    def save_thread(self) -> None:
+        if os.path.exists(f"{threads_folder}/threads.json"):
+            for item in self.threads:
+                if self.thread_id == item["thread_id"]:
+                    print("Thread already exists.")
+                    break
+                else:
+                    self.thread_title = self.get_title()
+                    with open(f"{threads_folder}/threads.json", "w") as file:
+                        new_thread = {"title": self.thread_title, "thread_id": self.thread_id}
+                        self.threads.append(new_thread)
+                        json.dump(self.threads, file)
+                    self.load_threads()
+        else:
+            self.thread_title = self.get_title()
+            with open(f"{threads_folder}/threads.json", "w") as file:
+                new_thread = {"title": self.thread_title, "thread_id": self.thread_id}
+                json.dump([new_thread], file)
+            self.load_threads()
+
+    def get_title(self) -> str:
+        self.create_message("Please provide a short title for this conversation.")
+        self.create_run()
+        title = self.output()
+
+        return title
+
+    def print_messages(self) -> None:
         data = self.list_messages()["data"]
         messages = " ".join([item["content"][0]["text"]["value"] for item in data])
         markdown = Markdown(messages, code_theme="one-dark")
@@ -110,7 +137,6 @@ class OpenAI:
     def retrieve_assistant(self):
         retrieve_assistant_url = f"https://api.openai.com/v1/assistants/{self.assistant_id}"
         response = requests.get(retrieve_assistant_url, headers=self.assistants_header)
-        print(response.json())
 
         self.assistant_name = response.json()["name"]
 
