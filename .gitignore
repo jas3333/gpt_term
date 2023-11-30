@@ -3,4 +3,5 @@ env
 __pycache__
 search.py
 threads
+logs.log
 

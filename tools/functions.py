@@ -5,6 +5,9 @@ from rich.markdown import Markdown
 from rich import print
 from rich.console import Console
 
+current_dir = os.path.dirname(os.path.abspath(__file__))
+threads_folder = os.path.join(current_dir, "../threads")
+
 
 def save_conversation(conversation) -> None:
     filename = input("Save conversation as? :")
@@ -154,7 +157,7 @@ def handle_user_input(user_input, client):
 
     elif user_input in ("load threads", "lt", "threads"):
         if os.path.exists("threads/threads.json"):
-            with open("threads/threads.json", "r") as file:
+            with open(f"{threads_folder}/threads.json", "r") as file:
                 threads = json.load(file)
 
                 for index, thread in enumerate(threads):

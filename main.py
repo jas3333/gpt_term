@@ -16,6 +16,7 @@ api_key = os.getenv("open_ai_key")
 brave_api = os.getenv("brave_api")
 assistant_id = os.getenv("assistant_id")
 
+# Setup Client
 client = OpenAI(api_key=api_key, brave_api=brave_api)
 client.assistant_id = str(assistant_id)
 client.load_thread()
@@ -34,6 +35,7 @@ logging.basicConfig(
     filemode="w",
 )
 
+# Empty list to store conversation to allow saving
 conversation = []
 
 
