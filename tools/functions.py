@@ -76,22 +76,6 @@ def send_code() -> str:
         return ""
 
 
-def new_assistant_id(assistants: dict) -> str:
-    for i, item in enumerate(assistants):
-        print(f"{i}. {item['name']}")
-
-    print("\nWhich assistant would you like to switch to?\n")
-    user = input(f"[0 - {len(assistants) - 1}] - ['c' or 'cancel' to cancel]: ")
-
-    if user in ("c", "cancel"):
-        return ""
-    elif user.isdigit() and int(user) < len(assistants):
-        return assistants[int(user)]["id"]
-    else:
-        print("Not a valid option")
-        return ""
-
-
 def print_messages(client) -> None:
     data = client.list_messages()["data"]
     messages = " ".join([item["content"][0]["text"]["value"] for item in data])
@@ -119,15 +103,21 @@ def handle_user_input(user_input, client):
             return False
 
     elif user_input in ("ca", "change assistant"):
-        assistants = client.list_assistants()
-        assistant_id = new_assistant_id(assistants)
+        client.list_assistants()
 
-        if assistant_id:
-            client.assistant_id = assistant_id
-            client.retrieve_assistant()
+        index = input("Select assistant [c to cancel]: ")
+        if index == "c" or index == "cancel":
             return False
+        elif index.isdigit():
+            if 0 <= int(index) < len(client.assistants):
+                client.assistant_id = client.assistants[int(index)]["id"]
+                client.assistant_name = client.assistants[int(index)]["name"]
+            else:
+                print("Invalid index, assistant doesn't exist.")
         else:
-            return False
+            print("Invalid input, use a number next time.")
+
+        return False
 
     elif user_input == "save thread" or user_input == "st":
         client.save_thread()

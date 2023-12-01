@@ -2,7 +2,6 @@ import os
 import time
 import json
 import requests
-import random
 import logging
 
 from .searchlib import BraveSearch
@@ -128,11 +127,11 @@ class OpenAI:
 
     def list_assistants(self):
         self.list_assistants_url = "https://api.openai.com/v1/assistants"
-        response = requests.get(self.list_assistants_url, headers=self.assistants_header)
-        data = response.json()
-        assistants = [{"name": item["name"], "id": item["id"]} for item in data["data"]]
+        response = requests.get(self.list_assistants_url, headers=self.assistants_header).json()
+        self.assistants = [{"name": item["name"], "id": item["id"]} for item in response["data"]]
 
-        return assistants
+        for index, assistant in enumerate(self.assistants):
+            print(f"{index}. - {assistant['name']} ")
 
     def retrieve_assistant(self):
         retrieve_assistant_url = f"https://api.openai.com/v1/assistants/{self.assistant_id}"
