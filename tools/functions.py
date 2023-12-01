@@ -109,6 +109,7 @@ def handle_user_input(user_input, client):
         if index == "c" or index == "cancel":
             return False
         elif index.isdigit():
+            # Check to make sure user doesn't input an index that doesn't exist
             if 0 <= int(index) < len(client.assistants):
                 client.assistant_id = client.assistants[int(index)]["id"]
                 client.assistant_name = client.assistants[int(index)]["name"]

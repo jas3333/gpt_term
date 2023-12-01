@@ -42,7 +42,7 @@ class OpenAI:
         self.load_threads()
 
     # Threads are what store the messages between you and the AI
-    def load_thread(self, index):
+    def load_thread(self, index: int) -> None:
         self.thread_id = self.threads[index]["thread_id"]
         self.thread_title = self.threads[index]["title"]
 
@@ -65,16 +65,21 @@ class OpenAI:
                     return None
 
             self.thread_title = self.get_title()
+            new_thread = {"title": self.thread_title, "thread_id": self.thread_id}
+            self.threads.append(new_thread)
+
             with open(f"{threads_folder}/threads.json", "w") as file:
-                new_thread = {"title": self.thread_title, "thread_id": self.thread_id}
-                self.threads.append(new_thread)
                 json.dump(self.threads, file)
+
             self.load_threads()
+
         else:
             self.thread_title = self.get_title()
+            new_thread = {"title": self.thread_title, "thread_id": self.thread_id}
+
             with open(f"{threads_folder}/threads.json", "w") as file:
-                new_thread = {"title": self.thread_title, "thread_id": self.thread_id}
                 json.dump([new_thread], file)
+
             self.load_threads()
 
     def get_title(self) -> str:
