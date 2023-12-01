@@ -62,14 +62,14 @@ class OpenAI:
             for item in self.threads:
                 if self.thread_id == item["thread_id"]:
                     print("Thread already exists.")
-                    break
-                else:
-                    self.thread_title = self.get_title()
-                    with open(f"{threads_folder}/threads.json", "w") as file:
-                        new_thread = {"title": self.thread_title, "thread_id": self.thread_id}
-                        self.threads.append(new_thread)
-                        json.dump(self.threads, file)
-                    self.load_threads()
+                    return None
+
+            self.thread_title = self.get_title()
+            with open(f"{threads_folder}/threads.json", "w") as file:
+                new_thread = {"title": self.thread_title, "thread_id": self.thread_id}
+                self.threads.append(new_thread)
+                json.dump(self.threads, file)
+            self.load_threads()
         else:
             self.thread_title = self.get_title()
             with open(f"{threads_folder}/threads.json", "w") as file:
