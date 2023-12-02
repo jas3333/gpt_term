@@ -91,8 +91,8 @@ class OpenAI:
 
     def print_messages(self) -> None:
         data = self.list_messages()["data"]
-        messages = " ".join([item["content"][0]["text"]["value"] for item in data])
-        markdown = Markdown(messages, code_theme="one-dark")
+        messages = [item["content"][0]["text"]["value"] for item in data]
+        markdown = Markdown(" ".join(messages[::-1]), code_theme="one-dark")
         print(markdown)
 
     def create_thread(self):
