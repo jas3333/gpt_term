@@ -31,6 +31,12 @@ class BraveSearch:
         for index, item in enumerate(data):
             print(f"[{index}] - {item}")
 
+    def list_url_desc(self, data):
+        for index, item in enumerate(data):
+            print(
+                f"[{index}] - {item['url']}\n- {item['description'].replace('<strong>', '').replace('</strong>', '')}\n"
+            )
+
     def select_urls(self, urls: list) -> list:
         selected = []
 

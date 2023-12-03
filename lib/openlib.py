@@ -239,7 +239,7 @@ class OpenAI:
         }
 
         urls = [item["url"] for item in results]
-        self.brave_search.list_urls(urls)
+        self.brave_search.list_url_desc(results)
         selected_urls = self.brave_search.select_urls(urls)
 
         for url in selected_urls:
