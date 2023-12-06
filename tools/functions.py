@@ -1,4 +1,6 @@
 import os
+import json
+
 from rich.table import Table
 from rich.markdown import Markdown
 from rich import print
@@ -43,6 +45,7 @@ def show_options() -> None:
         ("new thread (nt)", "Start a new thread"),
         ("save thread (st)", "Saves current thread to threads.json to continue conversation."),
         ("load threads (lt)", "Get a list of saved threads and load"),
+        ("delete thread (dt)", "Delete a thread"),
         ("quit (q)", "Quits the program."),
     ]
 
@@ -120,10 +123,12 @@ def handle_user_input(user_input, client):
 
         return False
 
+    # Save Thread
     elif user_input == "save thread" or user_input == "st":
         client.save_thread()
         return False
 
+    # Load Thread
     elif user_input in ("load threads", "lt", "threads"):
         client.list_threads()
 
@@ -142,6 +147,31 @@ def handle_user_input(user_input, client):
 
         return False
 
+    # Delete Thread
+    elif user_input in ("delete thread", "dt"):
+        client.list_threads()
+
+        thread_index = input("Which thread would you like to delete? [c to cancel]: ")
+        if thread_index == "c":
+            return False
+        elif thread_index.isdigit():
+            if int(thread_index) == 0 or int(thread_index) < len(client.threads):
+                thread_id = client.threads[int(thread_index)]["thread_id"]
+                client.delete_thread(thread_id)
+                del client.threads[int(thread_index)]
+
+                with open(f"{threads_folder}/threads.json", "w") as file:
+                    json.dump(client.threads, file)
+
+                return False
+            else:
+                print("Invalid index, thread doesn't exist.")
+        else:
+            print("Invalid input, use a number next time.")
+
+        return False
+
+    # New Thread
     elif user_input in ("new thread", "nt"):
         print("Creating new thread.")
         client.create_thread()

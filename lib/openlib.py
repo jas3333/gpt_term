@@ -82,6 +82,12 @@ class OpenAI:
 
             self.load_threads()
 
+    def delete_thread(self, thread_id) -> None:
+        delete_thread_url = f"https://api.openai.com/v1/threads/{thread_id}"
+        response = requests.delete(delete_thread_url, headers=self.assistants_header)
+
+        logging.info(f"Removing thread: {response.json()}")
+
     def get_title(self) -> str:
         self.create_message("Please provide a short title for this conversation.")
         self.create_run()
@@ -188,13 +194,6 @@ class OpenAI:
         response = requests.get(list_runs_url, headers=self.assistants_header).json()
 
         return response
-
-    def delete_thread(self):
-        delete_thread_url = f"https://api.openai.com/v1/threads/{self.thread_id}"
-
-        response = requests.delete(delete_thread_url, headers=self.assistants_header)
-
-        return response.json()
 
     # This method will check the status of the thread and output the results
     def output(self):
