@@ -34,8 +34,17 @@ class BraveSearch:
     def list_url_desc(self, data):
         for index, item in enumerate(data):
             print(
-                f"[{index}] - {item['url']}\n- {item['description'].replace('<strong>', '').replace('</strong>', '')}\n"
+                f"[{index}] - {item['url']}\n- {self.truncate(item['description'].replace('<strong>', '').replace('</strong>', ''), 10)}"
             )
+
+    def truncate(self, string: str, length: int) -> str:
+        if len(string.split()) >= length:
+            words = string.split()
+            truncated = " ".join([words[i] for i in range(length)]) + "..."
+        else:
+            return string.strip('"')
+
+        return truncated.strip('"')
 
     def select_urls(self, urls: list) -> list:
         selected = []
