@@ -13,12 +13,10 @@ def main() -> None:
     load_dotenv()
     api_key = os.getenv("open_ai_key")
     brave_api = os.getenv("brave_api")
-    assistant_id = os.getenv("assistant_id")
 
     # Setup Client
     client = OpenAI(api_key=api_key, brave_api=brave_api)
-    client.assistant_id = str(assistant_id)
-    client.retrieve_assistant()
+    client.get_assistants()
 
     # Load or create a thread
     if len(client.threads) > 0:

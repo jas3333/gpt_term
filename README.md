@@ -40,7 +40,6 @@ Create a .env with the following inside of it. The .env will need to be in the s
 ```
 brave_api=your_brave_api_key
 open_ai_key=your_open_ai_key
-assistant_id=your_assistant_id
 ```
 
 Variables must match, or rename in the main.py file to match your .env
@@ -49,7 +48,6 @@ Variables must match, or rename in the main.py file to match your .env
 # Main.py
 api_key = os.getenv("open_ai_key")
 brave_api = os.getenv("brave_api")
-assistant_id = os.getenv("assistant_id")
 ```
 
 #### Dependencies:

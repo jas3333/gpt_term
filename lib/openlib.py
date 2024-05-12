@@ -136,6 +136,18 @@ class OpenAI:
 
         return response
 
+    def get_assistants(self):
+        self.list_assistants_url = "https://api.openai.com/v1/assistants"
+        response = requests.get(self.list_assistants_url, headers=self.assistants_header).json()
+
+        try:
+            self.assistants = [{"name": item["name"], "id": item["id"]} for item in response["data"]]
+            self.assistant_name = self.assistants[0]["name"]
+            self.assistant_id = self.assistants[0]["id"]
+
+        except KeyError as e:
+            print(f"Error: {e}")
+
     def list_assistants(self):
         self.list_assistants_url = "https://api.openai.com/v1/assistants"
         response = requests.get(self.list_assistants_url, headers=self.assistants_header).json()
