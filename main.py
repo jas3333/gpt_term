@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import os
-import logging
 from rich import print
 from rich.markdown import Markdown
+from rich.console import Console
 from dotenv import load_dotenv
 from lib.openlib import OpenAI
 from tools.functions import handle_user_input, save_conversation, truncate
@@ -13,6 +13,7 @@ def main() -> None:
     load_dotenv()
     api_key = os.getenv("open_ai_key")
     brave_api = os.getenv("brave_api")
+    console = Console()
 
     # Setup Client
     client = OpenAI(api_key=api_key, brave_api=brave_api)
@@ -24,25 +25,14 @@ def main() -> None:
     else:
         client.create_thread()
 
-    # Logging
-    FORMAT = "%(message)s - %(levelname)s - %(message)s"
-
-    # Remove any logging handlers found
-    for handler in logging.root.handlers[:]:
-        logging.root.removeHandler(handler)
-
-    logging.basicConfig(
-        filename="logs.log",
-        level=logging.INFO,
-        format=FORMAT,
-        filemode="w",
-    )
-
     # Empty list to store conversation to allow saving
     conversation = []
 
     while True:
-        user_input = input(f"\n[{client.assistant_name} | {truncate(client.thread_title, 5)}]: ")
+        console.print(
+            f"\n[[green]{client.assistant_name}[/green] | [blue] {truncate(client.thread_title, 5)}[/blue] [? or help for a list of commands]]"
+        )
+        user_input = input(": ")
 
         print("-------------------------------------------------------------------------")
 

@@ -2,6 +2,8 @@
 env
 __pycache__
 search.py
-threads
+threads.json
 logs.log
+
+
 

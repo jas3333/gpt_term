@@ -2,7 +2,6 @@ import os
 import time
 import json
 import requests
-import logging
 
 from .searchlib import BraveSearch
 from bs4 import BeautifulSoup
@@ -35,25 +34,26 @@ class OpenAI:
         self.assistants_header = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.api_key}",
-            "OpenAI-Beta": "assistants=v1",
+            "OpenAI-Beta": "assistants=v2",
         }
 
         self.load_threads()
 
     # Threads are what store the messages between you and the AI
     def load_thread(self, index: int) -> None:
-        self.thread_id = self.threads[index]["thread_id"]
-        self.thread_title = self.threads[index]["title"]
-
-        self.print_messages()
+        try:
+            self.thread_id = self.threads[index]["thread_id"]
+            self.thread_title = self.threads[index]["title"]
+            self.print_messages()
+        except Exception as e:
+            print(f"Error: {e} {self.threads}.........................")
 
     def load_threads(self) -> None:
         if os.path.exists(f"{current_dir}/threads.json"):
             with open(f"{current_dir}/threads.json", "r") as file:
                 self.threads = json.load(file)
         else:
-            with open(f"{current_dir}/threads.json", "w") as file:
-                json.dump("[]", file)
+            self.threads = []
 
     def list_threads(self) -> None:
         for index, thread in enumerate(self.threads):
@@ -88,8 +88,6 @@ class OpenAI:
         delete_thread_url = f"https://api.openai.com/v1/threads/{thread_id}"
         response = requests.delete(delete_thread_url, headers=self.assistants_header)
 
-        logging.info(f"Removing thread: {response.json()}")
-
     def get_title(self) -> str:
         self.create_message("Please provide a short title for this conversation.")
         self.create_run()
@@ -109,8 +107,6 @@ class OpenAI:
         self.thread_id = response["id"]
         assistant = self.retrieve_assistant()
 
-        logging.info(f"Creating Thread: {response}")
-
         if self.debug_mode == True:
             print("Creating thread...")
             print(response)
@@ -125,16 +121,12 @@ class OpenAI:
         headers = self.assistants_header
         response = requests.post(create_message_url, headers=headers, json=payload)
 
-        logging.info(f"Sending message to API. Response: {response.json()}")
-
         self.create_run()
 
     # Listing the messages is needed once the run status is complete
     def list_messages(self):
         list_messages_url = f"https://api.openai.com/v1/threads/{self.thread_id}/messages"
         response = requests.get(list_messages_url, headers=self.assistants_header).json()
-
-        logging.info(f"Listing messages: {response}")
 
         return response
 
@@ -147,8 +139,8 @@ class OpenAI:
             self.assistant_name = self.assistants[0]["name"]
             self.assistant_id = self.assistants[0]["id"]
 
-        except KeyError as e:
-            print(f"Error: {e}")
+        except Exception as e:
+            print(f"Error: {e} {self.assistants}\n{self.assistant_name}\n{self.assistant_id}\n{response}")
 
     def list_assistants(self):
         self.list_assistants_url = "https://api.openai.com/v1/assistants"
@@ -171,12 +163,10 @@ class OpenAI:
         payload = {"assistant_id": self.assistant_id}
         response = requests.post(create_run_url, headers=self.assistants_header, json=payload).json()
 
-        logging.info(f"Creating run, response: {response}")
-
         try:
             self.run_id = response["id"]
         except Exception as e:
-            logging.error(f"An error occured: {response['error']['message']}: {e}")
+            print(f"Error: {e} {response}")
 
         return response
 
@@ -188,8 +178,6 @@ class OpenAI:
         payload = {"tool_outputs": tool_outputs}
         response = requests.post(create_run_url, headers=self.assistants_header, json=payload).json()
 
-        logging.info(f"Submitting a tool run: {response}")
-
         return response
 
     # Gets the status of the run
@@ -198,8 +186,6 @@ class OpenAI:
 
         header = {"Authorization": f"Bearer {self.api_key}", "OpenAI-Beta": "assistants=v1"}
         response = requests.get(retrieve_run_url, headers=header)
-
-        logging.info(f"Retrieving run: {response.json()}")
 
         return response.json()
 
@@ -220,12 +206,10 @@ class OpenAI:
             time.sleep(2)
             data = self.retrieve_run()
             status = data["status"]
-            logging.info(f"Run status: {status}")
 
             if status == "requires_action":
                 print("GPT is doing a websearch...")
                 # Tool calls has id, type, function
-                logging.info(f"Websearch called: {data}")
                 tool_calls = data["required_action"]["submit_tool_outputs"]["tool_calls"]
                 for tool_call in tool_calls:
                     id = tool_call["id"]
@@ -258,7 +242,7 @@ class OpenAI:
         for url in selected_urls:
             print(f"Checking: {url}")
             try:
-                response = requests.get(url, headers=headers)
+                response = requests.get(url, headers=headers, timeout=5)
                 soup = BeautifulSoup(response.content, "html.parser")
                 tags = soup.find_all(["p", "code", "pre"])
                 tag_texts = [tag.text for tag in tags]
