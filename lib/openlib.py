@@ -10,7 +10,6 @@ from rich import print
 from rich.markdown import Markdown
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
-threads_folder = os.path.join(current_dir, "../threads")
 
 
 class OpenAI:
@@ -49,16 +48,19 @@ class OpenAI:
         self.print_messages()
 
     def load_threads(self) -> None:
-        if os.path.exists(f"{threads_folder}/threads.json"):
-            with open(f"{threads_folder}/threads.json", "r") as file:
+        if os.path.exists(f"{current_dir}/threads.json"):
+            with open(f"{current_dir}/threads.json", "r") as file:
                 self.threads = json.load(file)
+        else:
+            with open(f"{current_dir}/threads.json", "w") as file:
+                json.dump("[]", file)
 
     def list_threads(self) -> None:
         for index, thread in enumerate(self.threads):
             print(f"{index}. {thread['title']}")
 
     def save_thread(self) -> None:
-        if os.path.exists(f"{threads_folder}/threads.json"):
+        if os.path.exists(f"{current_dir}/threads.json"):
             for item in self.threads:
                 if self.thread_id == item["thread_id"]:
                     print("Thread already exists.")
@@ -68,7 +70,7 @@ class OpenAI:
             new_thread = {"title": self.thread_title, "thread_id": self.thread_id}
             self.threads.append(new_thread)
 
-            with open(f"{threads_folder}/threads.json", "w") as file:
+            with open(f"{current_dir}/threads.json", "w") as file:
                 json.dump(self.threads, file)
 
             self.load_threads()
@@ -77,7 +79,7 @@ class OpenAI:
             self.thread_title = self.get_title()
             new_thread = {"title": self.thread_title, "thread_id": self.thread_id}
 
-            with open(f"{threads_folder}/threads.json", "w") as file:
+            with open(f"{current_dir}/threads.json", "w") as file:
                 json.dump([new_thread], file)
 
             self.load_threads()
