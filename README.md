@@ -12,8 +12,7 @@ Bring OpenAIs GPT assistants to your terminal.
 
 1. You'll need an OpenAI API key [Website](https://openai.com)
 2. Brave Search API key [Website](https://brave.com/search/api). They provide a free tier that gives 2000 requests a month.
-3. An initial assistants ID. You can create an assistant from the OpenAI website. You'll find the ID in the assistant creation section.
-4. In order to use the web search function, you'll need to enable function calling on your assistant by clicking add function and copy/paste
+3. In order to use the web search function, you'll need to enable function calling on your assistant by clicking add function and copy/paste
    the following into the function box on the website.
 
 ```json
