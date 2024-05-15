@@ -90,7 +90,7 @@ class OpenAI:
 
     def get_title(self) -> str:
         self.create_message("Please provide a short title for this conversation.")
-        self.create_run()
+        # self.create_run()
         title = self.output()
 
         return title
@@ -166,7 +166,7 @@ class OpenAI:
         try:
             self.run_id = response["id"]
         except Exception as e:
-            print(f"Error: {e} {response}")
+            print(f"Error saving: {e} {response}")
 
         return response
 
@@ -203,7 +203,7 @@ class OpenAI:
 
         # Threads are really weird, need to keep checking for updates
         while status != "completed":
-            time.sleep(2)
+            time.sleep(1)
             data = self.retrieve_run()
             status = data["status"]
 

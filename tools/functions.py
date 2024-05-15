@@ -8,7 +8,6 @@ from rich.console import Console
 
 # Create absolute path so if app is ran from random folder, threads can be found.
 current_dir = os.path.dirname(os.path.abspath(__file__))
-threads_folder = os.path.join(current_dir, "../threads")
 
 
 def save_conversation(conversation) -> None:
@@ -160,7 +159,7 @@ def handle_user_input(user_input, client):
                 client.delete_thread(thread_id)
                 del client.threads[int(thread_index)]
 
-                with open(f"{threads_folder}/threads.json", "w") as file:
+                with open(f"{current_dir}/threads.json", "w") as file:
                     json.dump(client.threads, file)
 
                 return False
